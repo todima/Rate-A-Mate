@@ -1,0 +1,145 @@
+package com.example.rater;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import java.util.ArrayList;
+
+
+public class dbHelper extends SQLiteOpenHelper {
+    private static String dbname="mydatabase";
+    private static int dbvirsion=1;
+    private static String tbname="data";
+
+    private static String uid="id";
+    private static String password="password";
+    private static String number="number";
+    private static String username="username";
+
+
+    dbHelper(Context context)
+    {
+        super(context,dbname,null,dbvirsion);
+
+    }
+    @Override
+    public void onCreate(SQLiteDatabase db)
+    {
+        String sql="create table "+tbname+" ("+uid+" integer primary key autoincrement, "+username+" varchar(30) not null unique, "+number+" varchar(15), "+password+" varchar(40))";
+        db.execSQL(sql);
+        String sql2="CREATE TABLE `Mates` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `matename` TEXT )";
+        db.execSQL(sql2);
+        String sql3="CREATE TABLE `ratings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `mateid` TEXT , `rate` TEXT, `comment` TEXT, `userid` TEXT)";
+        db.execSQL(sql3);
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+    public boolean insertdata(userpojo p)
+    {
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues cv=new ContentValues();
+        cv.put(username,p.getUsername());
+        cv.put(password,p.getPassword());
+        cv.put(number,p.getNumber());
+        try {
+            db.insertOrThrow(tbname, null, cv);
+        }catch (SQLException e){
+            return false;
+        }
+        return true;
+    }
+
+
+
+
+    public boolean checklogin(String s, String s1) {
+        String countQuery = "SELECT  * FROM " + tbname+" where "+username+"=\""+s+"\" AND "+password+"=\""+s1+"\"";
+        Log.d("Query",countQuery);
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int count = cursor.getCount();
+        if(count>0){
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    public ArrayList<users> getemployes(String string){
+        ArrayList<users> ar=new ArrayList<>();
+        String countQuery = "SELECT  * FROM Mates";
+
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+
+        while (cursor.moveToNext()) {
+            users a=new users();
+            String eid=cursor.getString(cursor.getColumnIndex("id"));
+            String chekc = "SELECT  * FROM ratings where mateid=\""+eid+"\" AND userid=\""+string+"\"";
+            Log.d("Query",chekc);
+            Cursor cursor1 = db.rawQuery(chekc, null);
+            int count = cursor1.getCount();
+            if(count>0){
+               a.setCanrate("no");
+            }else {
+                a.setCanrate("yes");
+            }
+
+
+
+            a.setId(cursor.getString(cursor.getColumnIndex("id")));
+            a.setName(cursor.getString(cursor.getColumnIndex("matename")));
+            ar.add(a);
+
+        }
+        cursor.close();
+
+
+        return  ar;
+    }
+
+    public void insertrating(String username, String eid, String s, String s1) {
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues cv=new ContentValues();
+        cv.put("mateid",eid);
+        cv.put("rate",s);
+        cv.put("comment",s1);
+        cv.put("userid",username);
+        db.insert("ratings",null,cv);
+    }
+    public ArrayList<ratingrow> getrating(String string){
+        ArrayList<ratingrow> ar=new ArrayList<>();
+        String countQuery = "SELECT  * FROM ratings where mateid=\""+string+"\"";
+        Log.d("sql",countQuery);
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery(countQuery, null);
+
+        while (cursor.moveToNext()) {
+            ratingrow a= new ratingrow();
+            a.setRate(cursor.getString(cursor.getColumnIndex("rate")));
+            a.setComment(cursor.getString(cursor.getColumnIndex("comment")));
+            ar.add(a);
+
+        }
+        cursor.close();
+
+
+        return  ar;
+    }
+    public void addmate(String name){
+        SQLiteDatabase db=getWritableDatabase();
+        ContentValues cv=new ContentValues();
+
+        cv.put("matename",name);
+
+        db.insert("Mates",null,cv);
+    }
+}
