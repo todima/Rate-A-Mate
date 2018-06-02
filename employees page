@@ -1,0 +1,64 @@
+package com.example.rater;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+import java.util.ArrayList;
+
+public class Employees extends AppCompatActivity {
+
+    ListView list;
+    dbHelper d;
+    ArrayList<users> ar;
+    ArrayList<String> name;
+    ArrayList<String> ids;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_employees);
+        list=findViewById(R.id.list);
+        d=new dbHelper(Employees.this);
+        ar=d.getemployes(getSharedPreferences("pref",MODE_PRIVATE).getString("username",""));
+        name=new ArrayList<>();
+        ids=new ArrayList<>();
+        for(int i=0;i<ar.size();i++){
+            name.add(ar.get(i).getName());
+            ids.add(ar.get(i).getId());
+        }
+        ArrayAdapter ad=new ArrayAdapter(getApplicationContext(),R.layout.row,R.id.text,name);
+
+
+        list.setAdapter(ad);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    if(ar.get(i).getCanrate().equals("yes")){
+                        startActivity(new Intent(getApplicationContext(),RatingPage.class).putExtra("rate","yes").putExtra("eid",ar.get(i).getId()));
+                    }else {
+                        startActivity(new Intent(getApplicationContext(),RatingPage.class).putExtra("rate","no").putExtra("eid",ar.get(i).getId()));
+                    }
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(R.id.add==item.getItemId()){
+            startActivity(new Intent(getApplicationContext(),Addmate.class));
+        }
+        return super.onOptionsItemSelected(item);
+    }
+}
